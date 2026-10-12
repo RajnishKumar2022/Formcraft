@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Formcraft
 
-## Getting Started
+Formcraft is a Next.js form builder with account signup/login, published public forms, and a creator dashboard for reviewing submissions.
 
-First, run the development server:
+## Requirements
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 20.9 or newer
+- npm
+- A MongoDB database (MongoDB Atlas is suitable for deployment)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Install dependencies:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   npm install
+   ```
 
-## Learn More
+2. Copy `.env.example` to `.env` and set the MongoDB connection string and two separate, random JWT secrets. Generate each secret with:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   Do not commit `.env` or expose these values in client-side variables.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Start the development server:
 
-## Deploy on Vercel
+   ```bash
+   npm run dev
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. Open <http://localhost:3000>.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+The app can be hosted on Vercel or another Node.js host that supports Next.js 16.
+
+### Vercel
+
+1. Push this project to a Git provider and import the repository in Vercel. Vercel should detect Next.js automatically; use `npm run build` as the build command.
+2. In the Vercel project settings, add these environment variables for **Production** (and Preview if desired):
+   - `DB_URL` — the MongoDB URI for the production database.
+   - `ACCESS_TOKEN_SECRET` — a unique random secret.
+   - `REFRESH_TOKEN_SECRET` — a different unique random secret.
+3. In MongoDB Atlas, create a database user with access only to the app database, and allow connections from the hosting provider. Atlas network rules must permit the deployed app to reach the cluster.
+4. Redeploy after setting environment variables. Test signup/login, create a form, publish it, and submit through its `/respond/<formId>` link.
+
+### Other Node.js hosts
+
+Configure the same three environment variables in the hosting provider, install dependencies from `package-lock.json`, run `npm run build`, and start with `npm run start`. Use a Node.js runtime version of 20.9 or newer. The host must support the Next.js Node.js server runtime; a static-only host/export is not supported because the app uses API routes and MongoDB.
+
+## Form sharing
+
+Only forms with the `published` status are available to customers. In the dashboard, use the QR-code action next to a published form to display its scannable code, copy its respondent URL, or download the QR code as an SVG. The QR code points to `/respond/<formId>` on the current site domain. Draft and archived forms are intentionally not public. Responses are anonymous.
+
+When sharing a locally generated link such as `http://localhost:3000/respond/<formId>`, it only works on the computer running the app. For customers to scan and open it on their own devices, deploy the app first and use the QR code from your deployed dashboard.
+
+## Help and settings
+
+The dashboard sidebar links to the Help Center (`/help`) for form publishing, response collection, QR sharing, and common questions. Settings (`/settings`) lets signed-in users select light, dark, or system appearance and view their account details.
